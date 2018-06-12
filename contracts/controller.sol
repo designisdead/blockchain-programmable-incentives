@@ -5,6 +5,7 @@ import './storage/people-storage.sol';
 import './storage/timesheet-storage.sol';
 import './storage/group-storage.sol';
 
+
 contract Controller is Enabled {
 
   function registerUser(string _name, string _email, string _company, string _avatar) external {

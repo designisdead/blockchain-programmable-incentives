@@ -100,6 +100,24 @@ contract('Test contracts', async (accounts) => {
       assert.equal(prpsl[0], "qm100000", "references must be equal")
       assert.equal(prpsl[1], accounts[1], "author of proposal must be accounts1")
     })
+    it('Should throw when someone who isnt a member tries to add a proposal', async () => {
+      let bnty = await controller.getBounties(group)
+      bnty = bnty[0]
+      try {
+        await controller.createProposal(group, bnty, "qm200000", {from: accounts[2]})
+      } catch (e) {
+        console.info("A non-member can't create a proposal to a bounty " + e)
+      }
+    })
+    it('Should throw when someone who is not the issuer tries to accept a bounty', async () => {
+      let bnty = await controller.getBounties(group)
+      bnty = bnty[0]
+      try {
+        await controller.acceptProposal(group, bnty, 0, {from: accounts[1]})
+      } catch (e) {
+        console.info("A person that isn't the issuer can't accept a proposal" + e)
+      }
+    })
     it('Should let accounts0, the issuer of the bounty, accept the proposal', async () => {
       let bnty = await controller.getBounties(group)
       bnty = bnty[0]

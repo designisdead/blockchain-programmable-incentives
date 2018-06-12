@@ -8,6 +8,12 @@ module.exports = {
       gas: 68719476635,
       gasLimit: 68719476735,
       gasPrice: 1
+    },
+    ganache: {
+      host: "localhost",
+      port: 7545,
+      network_id: "*",
+      gasPrice: 1
     }
   },
   solc: {
