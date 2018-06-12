@@ -91,7 +91,21 @@ contract('Test contracts', async (accounts) => {
       } catch (e) {
         console.info("A person that isn't a member can't create a bounty " +e)
       }
-      console.info(await controller.getBounties(group))
+    })
+    it('Should let accounts1 add a proposal to the bounty', async() => {
+      let bnty = await controller.getBounties(group)
+      bnty = bnty[0]
+      await controller.createProposal(group, bnty, "qm100000", {from: accounts[1]})
+      let prpsl = await controller.getProposal(group, bnty, 0)
+      assert.equal(prpsl[0], "qm100000", "references must be equal")
+      assert.equal(prpsl[1], accounts[1], "author of proposal must be accounts1")
+    })
+    it('Should let accounts0, the issuer of the bounty, accept the proposal', async () => {
+      let bnty = await controller.getBounties(group)
+      bnty = bnty[0]
+      await controller.acceptProposal(group, bnty, 0, {from: accounts[0]})
+      let prpsl = await controller.getProposal(group, bnty, 0)
+      assert.equal(prpsl[2], true, "Proposal should be accepted now")
     })
   })
 })
