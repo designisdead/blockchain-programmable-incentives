@@ -11,11 +11,20 @@ const Group = artifacts.require('Group')
 const TimesheetProxy = artifacts.require('TimesheetProxy')
 const TimesheetLib = artifacts.require('TimesheetLib')
 const Timesheet = artifacts.require('Timesheet')
+const Token = artifacts.require('Token')
 
 const preReqs = exports.preReqs = async (accounts) => {
   const contractRegistry = await ContractRegistry.new()
     it('Should have ContractRegistry deployed', async () => {
       assert(contractRegistry !== undefined, "contractRegistry is deployed")
+    })
+    const token = await Token.new("Knuckle", "KNCKL", 18)
+    it('Should deploy token', async () => {
+      assert(token !== undefined, "token deployed")
+    })
+    await contractRegistry.addContract("token", token.address)
+    it('Should have added token to the contractRegistry', async () => {
+      assert.equal(await contractRegistry.getContract("token"), token.address, "Addresses must be equal")
     })
     const peopleLib = await PeopleLib.new()
     it('Should have peopleLib deployed', async () => {
@@ -108,6 +117,10 @@ const preReqs = exports.preReqs = async (accounts) => {
     await contractRegistry.addContract('timesheet-storage', timesheet.address)
     it('Should have added timesheet-storage to the contractRegistry', async () => {
       assert.equal(await contractRegistry.getContract('timesheet-storage'), timesheet.address, "Addresses must be equal")
+    })
+    await token.transferOwnership(controller.address)
+    it('Should have made controller contract the owner of token', async () => {
+      assert.equal(await token.owner.call(), controller.address, "controller must be the owner")
     })
     return { contractRegistry, controller, timesheet }
 }

@@ -4,13 +4,15 @@ import './registry/enabled.sol';
 import './storage/people-storage.sol';
 import './storage/timesheet-storage.sol';
 import './storage/group-storage.sol';
+import './token.sol';
 
 
 contract Controller is Enabled {
 
   function registerUser(string _name, string _email, string _company, string _avatar) external {
     require(!People(ContractProvider(CMC).contracts("people-storage"))._isRegistered(msg.sender));
-    return People(ContractProvider(CMC).contracts("people-storage")).registerUser(_name, _email, _company, _avatar, msg.sender);
+    People(ContractProvider(CMC).contracts("people-storage")).registerUser(_name, _email, _company, _avatar, msg.sender);
+    Token(ContractProvider(CMC).contracts("token")).mint(msg.sender, 500*10**18);
   }
 
   function getUser(address _address) external view returns (string, string, string, string, address, address[]) {
