@@ -37,5 +37,5 @@ library BountyInterface {
   function getBounty2(Bounty storage _bounty, bytes32 _index) external view returns (statusOptions, address, uint, uint);
   function createProposal(Bounty storage _bounty, bytes32 _index, string _reference, address _sender) external;
   function getProposal(Bounty storage _bounty, bytes32 _index, uint _proposalId) external view returns (string, address, bool, uint);
-  function acceptProposal(Bounty storage _bounty, bytes32 _index, uint _proposalId, address _sender) external;
+  function acceptProposal(Bounty storage _bounty, bytes32 _index, uint _proposalId) external;
 }

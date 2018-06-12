@@ -17,6 +17,7 @@ library GroupLib {
   }
 
   function acceptMembership(GroupInterface.Group storage _group, address _pending, address _sender) external {
+    require(_sender == _group.owner);
     for (uint i=0; i < _group.pendingMembers.length; i++) {
       if (_pending == _group.pendingMembers[i]) {
         _group.pendingMembers = _deleteAddress(_group.pendingMembers, i);
@@ -26,6 +27,7 @@ library GroupLib {
   }
 
   function declineMembership(GroupInterface.Group storage _group, address _pending, address _sender) external {
+    require(_sender == _group.owner);
     for (uint i = 0; i < _group.pendingMembers.length; i++) {
       if (_pending == _group.pendingMembers[i]) {
         _group.pendingMembers = _deleteAddress(_group.pendingMembers, i);

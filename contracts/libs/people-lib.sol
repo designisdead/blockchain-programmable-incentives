@@ -55,7 +55,7 @@ library PeopleLib {
     return _people.people[_address].groups;
   }
 
-  function addGroup (PeopleInterface.People storage _people, address _group, address _user, address _sender) external {
+  function addGroup (PeopleInterface.People storage _people, address _group, address _user) external {
       _people.people[_user].groups.push(_group);
   }
 
@@ -91,7 +91,7 @@ library PeopleLib {
     return _people.people[_sender].personBounties[_group];
   }
 
-  function _isRegistered (PeopleInterface.People storage _people, address _sender) external returns (bool) {
+  function _isRegistered (PeopleInterface.People storage _people, address _sender) external view returns (bool) {
     if (_people.people[_sender].wallet == _sender) {
       return true;
     } else {

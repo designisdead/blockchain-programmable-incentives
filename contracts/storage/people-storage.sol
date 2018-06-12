@@ -22,8 +22,8 @@ contract People is Enabled {
     return people.getUser(_wallet);
   }
 
-  function addGroup(address _group, address _user, address _sender) external isEnabled("controller") {
-    return people.addGroup(_group, _user, _sender);
+  function addGroup(address _group, address _user) external isEnabled("controller") {
+    return people.addGroup(_group, _user);
   }
 
   function leaveGroup(address _group, address _sender) external isEnabled("controller") {

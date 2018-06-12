@@ -58,6 +58,18 @@ contract Group is Enabled {
     return (title, issueURL, reference, timestamp, deadline, status, issuer, reward, proposalCount);
   }
 
+  function createProposal(bytes32 _index, string _reference, address _sender) external {
+    return bounties.createProposal(_index, _reference, _sender);
+  }
+
+  function acceptProposal(bytes32 _index, uint _id) external { //bountyIndex , proposalId
+    return bounties.acceptProposal(_index, _id);
+  }
+
+  function getProposal(bytes32 _index, uint _id) external view returns (string, address, bool, uint) {
+    return bounties.getProposal(_index, _id);
+  }
+
   function _isMember(address _sender) external view returns (bool) {
     return group._isMember(_sender);
   }

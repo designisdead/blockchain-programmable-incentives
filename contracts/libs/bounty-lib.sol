@@ -55,10 +55,7 @@ library BountyLib {
       return (_bounty.proposals[_index][_proposalId].reference, _bounty.proposals[_index][_proposalId].author, _bounty.proposals[_index][_proposalId].accepted, _bounty.proposals[_index][_proposalId].timestamp);
   }
 
-  function acceptProposal(BountyInterface.Bounty storage _bounty, bytes32 _index, uint _proposalId, address _sender) external {
-    //require(now > _bounty.bounties[_index].deadline);
-    require(_sender == _bounty.bounties[_index].issuer);
-    require(_bounty.bounties[_index].status == BountyInterface.statusOptions.ACTIVE);
+  function acceptProposal(BountyInterface.Bounty storage _bounty, bytes32 _index, uint _proposalId) external {
     _bounty.proposals[_index][_proposalId].accepted = true;
     _bounty.bounties[_index].status = BountyInterface.statusOptions.COMPLETED;
   }

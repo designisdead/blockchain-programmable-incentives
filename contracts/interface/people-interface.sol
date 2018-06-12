@@ -18,7 +18,7 @@ library PeopleInterface {
     function registerUser(People storage _people, string _name, string _email, string _company, string _avatar, address _sender) external;
     function updateUser(People storage _people, string _name, string _email, string _company, string _avatar, address _sender) external;
     function getUser(People storage _people, address _address) external view returns (string, string, string, string, address, address[]);
-    function addGroup(People storage _people, address _group, address _user, address _sender) external;
+    function addGroup(People storage _people, address _group, address _user) external;
     function leaveGroup(People storage _people, address _group, address _sender) external;
     function addBounty(People storage _people, address _group, bytes32 _index, address _sender) external;
     function getUserBountiesByGroup(People storage _people, address _group, address _sender) external view returns (bytes32 []);
