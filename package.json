@@ -1,0 +1,25 @@
+{
+  "name": "poc-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/designisdead/blockchain-programmable-incentives.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/designisdead/blockchain-programmable-incentives/issues"
+  },
+  "homepage": "https://github.com/designisdead/blockchain-programmable-incentives#readme",
+  "dependencies": {
+    "ethers": "^3.0.22"
+  }
+}

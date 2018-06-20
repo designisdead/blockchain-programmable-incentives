@@ -46,16 +46,24 @@ contract StandardToken is ERC20 {
   * @param _to address The address which you want to transfer to
   * @param _value uint256 the amount of tokens to be transferred
   */
- function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
-   require(_to != address(0), "ADDRESS_NIL_VALUE");
-   require(_value <= balances[_from], "INSUFFICIENT_BALANCE");
-   require(_value <= allowed[_from][msg.sender], "INSUFFICIENT_ALLOWANCE");
-   balances[_from] = balances[_from].sub(_value);
-   balances[_to] = balances[_to].add(_value);
-   allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
-   emit Transfer(_from, _to, _value);
-   return true;
- }
+  function transferFrom(
+    address _from,
+    address _to,
+    uint256 _value
+  )
+    public
+    returns (bool)
+  {
+    require(_to != address(0));
+    require(_value <= balances[_from]);
+    require(_value <= allowed[_from][msg.sender]);
+
+    balances[_from] = balances[_from].sub(_value);
+    balances[_to] = balances[_to].add(_value);
+    allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
+    emit Transfer(_from, _to, _value);
+    return true;
+  }
 
  /**
   * @dev Approve the passed address to spend the specified amount of tokens on behalf of msg.sender.

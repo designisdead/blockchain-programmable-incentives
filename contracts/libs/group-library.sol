@@ -4,16 +4,16 @@ import '../interface/group-interface.sol';
 
 library GroupLib {
 
-  event logGroupCreated(string _name, address _owner);
-  event logMembershipRequested(address indexed group, address indexed user);
-
-  function getGroup(GroupInterface.Group storage _group) external view returns (string, string, address, address[], address[]) {
+  function getGroup(GroupInterface.Group storage _group) external view returns (bytes32, string, address, address[], address[]) {
       return (_group.name, _group.avatar, _group.owner, _group.members, _group.pendingMembers);
+  }
+
+  function groupMeta(GroupInterface.Group storage _group) external view returns (bytes32, string, address) {
+    return (_group.name, _group.avatar, _group.owner);
   }
 
   function requestMembership(GroupInterface.Group storage _group, address _sender) external {
     _group.pendingMembers.push(_sender);
-    emit logMembershipRequested(address(this), _sender);
   }
 
   function acceptMembership(GroupInterface.Group storage _group, address _pending, address _sender) external {

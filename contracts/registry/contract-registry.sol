@@ -6,6 +6,7 @@ import './enabled.sol';
 contract ContractRegistry is Ownable {
   mapping (bytes32 => address) public contracts;
   mapping(bytes32 => address) public libraries;
+  mapping (bytes32 => address) public groups;
 
   function addLibrary(bytes32 _name, address _lib) external onlyOwner {
     require(libraries[_name] == address(0), "LIBRARY_ALREADY_EXISTS");
@@ -37,6 +38,20 @@ contract ContractRegistry is Ownable {
     Enabled _Enabled = Enabled(contracts[_name]);
     _Enabled.kill();
     contracts[_name] = 0x0;
+  }
+
+  function addGroup(bytes32 _name, address _address) external {
+    require(this.getContract('controller') == msg.sender);
+    groups[_name] == _address;
+  }
+
+  function removeGroup(bytes32 _name) external {
+    require(this.getContract('controller') == msg.sender);
+    groups[_name] = address(0);
+  }
+
+  function getGroup(bytes32 _name) external view returns (address) {
+    return groups[_name];
   }
 
   function changeContractCMC(bytes32 _name, address _newCMC) external onlyOwner {

@@ -5,8 +5,8 @@ const PeopleLib = artifacts.require('PeopleLib')
 const People = artifacts.require('People')
 const GroupProxy = artifacts.require('GroupProxy')
 const GroupLib = artifacts.require('GroupLib')
-const BountyLib = artifacts.require('BountyLib')
-const BountyProxy = artifacts.require('BountyProxy')
+const PRLib = artifacts.require('PRLib')
+const PRProxy = artifacts.require('PRProxy')
 const Group = artifacts.require('Group')
 const TimesheetProxy = artifacts.require('TimesheetProxy')
 const TimesheetLib = artifacts.require('TimesheetLib')
@@ -58,21 +58,21 @@ const preReqs = exports.preReqs = async (accounts) => {
     it('Should have added groupProxy to the contractRegistry', async () => {
       assert.equal(await contractRegistry.getContract("group-proxy"), groupProxy.address, "Addresses must be equal")
     })
-    const bountyLib = await BountyLib.new()
-    it('Should have deployed bountyLib', () => {
-      assert(bountyLib !== undefined, "BountyLib deployed")
+    const prLib = await PRLib.new()
+    it('Should have deployed prLib', () => {
+      assert(prLib !== undefined, "PRLib deployed")
     })
-    await contractRegistry.addLibrary("bounty", bountyLib.address)
-    it('Should have added bountyLib to the contractRegistry', async () => {
-      assert.equal(await contractRegistry.getLibrary('bounty'), bountyLib.address, "Addresses must be equal")
+    await contractRegistry.addLibrary("pullrequests", prLib.address)
+    it('Should have added prLib to the contractRegistry', async () => {
+      assert.equal(await contractRegistry.getLibrary("pullrequests"), prLib.address, "Addresses must be equal")
     })
-    const bountyProxy = await BountyProxy.new()
-    it('Should have deployed bountyProxy', () => {
-      assert(bountyProxy !== undefined, "bountyProxy deployed")
+    const prProxy = await PRProxy.new()
+    it('Should have deployed prProxy', () => {
+      assert(prProxy !== undefined, "prProxy deployed")
     })
-    await contractRegistry.addContract("bounty-proxy", bountyProxy.address)
-    it('Should have added bountyProxy to the contractRegistry', async () => {
-      assert.equal(await contractRegistry.getContract('bounty-proxy'), bountyProxy.address, "Addresses must be equal")
+    await contractRegistry.addContract("pr-proxy", prProxy.address)
+    it('Should have added prProxy to the contractRegistry', async () => {
+      assert.equal(await contractRegistry.getContract('pr-proxy'), prProxy.address, "Addresses must be equal")
     })
     const timesheetLib = await TimesheetLib.new()
     it('Should have deployed timesheetLib', () => {
@@ -91,8 +91,8 @@ const preReqs = exports.preReqs = async (accounts) => {
       assert.equal(await contractRegistry.getContract('timesheet-proxy'), timesheetProxy.address, "Addresses must be equal")
     })
     People.link('PeopleInterface', peopleProxy.address)
-    Controller.link({GroupInterface: groupProxy.address, BountyInterface: bountyProxy.address})
-    Group.link({GroupInterface: groupProxy.address, BountyInterface: bountyProxy.address})
+    //Controller.link({GroupInterface: groupProxy.address, PRInterface: prProxy.address})
+    Group.link({GroupInterface: groupProxy.address, PRInterface: prProxy.address})
     Timesheet.link('TimesheetInterface', timesheetProxy.address)
     const controller = await Controller.new()
     it('Should have deployed Controller', async () => {
@@ -122,5 +122,5 @@ const preReqs = exports.preReqs = async (accounts) => {
     it('Should have made controller contract the owner of token', async () => {
       assert.equal(await token.owner.call(), controller.address, "controller must be the owner")
     })
-    return { contractRegistry, controller, timesheet }
+    return { contractRegistry, controller, timesheet, token }
 }

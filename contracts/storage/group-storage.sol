@@ -1,22 +1,20 @@
 pragma solidity ^0.4.23;
 
 import '../interface/group-interface.sol';
-import '../interface/bounty-interface.sol';
+import '../interface/pr-interface.sol';
+//import '../interface/bounty-interface.sol';
 import '../registry/enabled.sol';
 
 contract Group is Enabled {
 
   using GroupInterface for GroupInterface.Group;
-  using BountyInterface for BountyInterface.Bounty;
+  using PRInterface for PRInterface.PR;
+  //using BountyInterface for BountyInterface.Bounty;
   GroupInterface.Group group;
-  BountyInterface.Bounty bounties;
+  PRInterface.PR pullrequests;
+  //BountyInterface.Bounty bounties;
 
-  event logGroupCreated(string _name, address _owner);
-  event logMembershipRequested(address indexed group, address indexed user);
-  event logCreateBounty(address indexed _issuer, address _group, string _title, uint _reward);
-  event logActivateBounty(address indexed _issuer, address _group, string _title, uint _reward);
-
-  constructor (string _name, string _avatar, address _owner, address _CMC) public {
+  constructor (bytes32 _name, string _avatar, address _owner, address _CMC) public {
     group.name = _name;
     group.avatar = _avatar;
     group.owner = _owner;
@@ -24,10 +22,13 @@ contract Group is Enabled {
     CMC=_CMC;
   }
 
-  function getGroup() external view  returns (string, string, address, address[], address[]) {
+  function getGroup() external view  returns (bytes32, string, address, address[], address[]) {
     return group.getGroup();
   }
 
+  function groupMeta() external view returns (bytes32, string, address) {
+    return group.groupMeta();
+  }
   function requestMembership(address _sender) external  {
     return group.requestMembership(_sender);
   }
@@ -44,30 +45,57 @@ contract Group is Enabled {
     return group.leaveGroup(_sender);
   }
 
-  function createBounty(string _title, string _issueURL, string _reference, uint _deadline, address _issuer, uint _reward) external  returns (bytes32) {
-    return bounties.createBounty(_title, _issueURL, _reference, _deadline, _issuer, _reward);
+  function changeReward(uint _newReward) external {
+    return pullrequests.changeReward(_newReward);
   }
 
-  function getBounties() external view returns (bytes32[]) {
-    return bounties.getBounties();
+  function getReward() external view returns (uint) {
+    return pullrequests.getReward();
   }
 
-  function getBounty(bytes32 _index) external view  returns (string title, string issueURL, string reference, uint timestamp, uint deadline, BountyInterface.statusOptions status, address issuer, uint reward, uint proposalCount) {
-    (title, issueURL, reference, timestamp, deadline) = bounties.getBounty1(_index);
-    (status, issuer, reward, proposalCount) = bounties.getBounty2(_index);
-    return (title, issueURL, reference, timestamp, deadline, status, issuer, reward, proposalCount);
+  function createPR(string _title, string _reference, uint _deadline, address _issuer) external returns (bytes32) {
+    bytes32 index = pullrequests.createPullRequest(_title, _reference, _deadline, _issuer);
+    return index;
   }
 
-  function createProposal(bytes32 _index, string _reference, address _sender) external {
-    return bounties.createProposal(_index, _reference, _sender);
+  function getPRs() external view returns (bytes32[]) {
+    return pullrequests.getPRs();
   }
 
-  function acceptProposal(bytes32 _index, uint _id) external { //bountyIndex , proposalId
-    return bounties.acceptProposal(_index, _id);
+  function getPR(bytes32 _index) external view
+  returns (
+    string title,
+    string reference,
+    uint timestamp,
+    uint deadline,
+    PRInterface.statusOptions status,
+    address issuer,
+    uint reward,
+    uint changeRequestCount,
+    address[] contributers) {
+    (title, reference, timestamp, deadline, status) = pullrequests.getPR1(_index);
+    (issuer, reward, changeRequestCount, contributers) = pullrequests.getPR2(_index);
+    return (title, reference, timestamp, deadline, status, issuer, reward, changeRequestCount, contributers);
   }
 
-  function getProposal(bytes32 _index, uint _id) external view returns (string, address, bool, uint) {
-    return bounties.getProposal(_index, _id);
+  function addContribution(bytes32 _index, uint _amount, address _sender) {
+    return pullrequests.addContribution(_index, _amount, _sender);
+  }
+
+  function getContribution(bytes32 _index, address _contributer) external view returns (uint) {
+    return pullrequests.getContribution(_index, _contributer);
+  }
+
+  function approvePR(bytes32 _index, address _sender) external {
+    return pullrequests.approvePR(_index, _sender);
+  }
+
+  function requestChange(bytes32 _index, string _reference, address _sender) external returns (uint) {
+    return pullrequests.requestChange(_index, _reference, _sender);
+  }
+
+  function getChangeRequest(bytes32 _index, uint _id) returns (string, address, uint) {
+    return pullrequests.getChangeRequest(_index, _id);
   }
 
   function _isMember(address _sender) external view returns (bool) {

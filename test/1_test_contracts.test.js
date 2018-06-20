@@ -1,13 +1,36 @@
 const PreReqs = require('./util/shared_instances')
 const assertError = require('./util/assertRevert')
+const utils = require('ethers').utils
 
+var asciiToHex = function(str) {
+    if(!str)
+        return "0x00";
+    var hex = "";
+    for(var i = 0; i < str.length; i++) {
+        var code = str.charCodeAt(i);
+        var n = code.toString(16);
+        hex += n.length < 2 ? '0' + n : n;
+    }
+
+    return "0x" + hex;
+};
+
+function stringToBytes32(text) {
+    let result = utils.toUtf8Bytes(text)
+    if (result.length > 32) { throw new Error('String too long') }
+    result = utils.hexlify(result);
+    while (result.length < 66) { result += '0'; }
+    if (result.length !== 66) { throw new Error("invalid web3 implicit bytes32"); }
+    return result;
+}
 
 contract('Test contracts', async (accounts) => {
-  let controller, prerequisites, contractRegistry
+  let controller, prerequisites, contractRegistry, token
   before(async() => {
     prerequisites = await PreReqs.preReqs(accounts)
     controller = prerequisites.controller
     contractRegistry = prerequisites.contractRegistry
+    token = prerequisites.token
   })
   describe('Registry', PreReqs.preReqs(accounts))
   describe('People', () => {
@@ -28,24 +51,21 @@ contract('Test contracts', async (accounts) => {
       assert.equal(res[0], 'Dan', 'User not found')
     })
     it('Throws trying to register an already registered user', async () => {
-      assertError(controller.registerUser('Dan', 'dan@eos.com', 'EOS', '', {from: accounts[1]}))
+      await assertError(controller.registerUser('Dan', 'dan@eos.com', 'EOS', '', {from: accounts[1]}))
     })
   })
   describe('Group creation & membership', () => {
     it('Should create a new group', async () => {
-      await controller.createGroup("Test", "", {from:accounts[0]})
+      await controller.createGroup(asciiToHex("test"), "", {from:accounts[0]})
       group = await controller.getUser(accounts[0])
       group = group[5][0]
       let res = await controller.getGroup(group)
-      assert.equal(res[0], "Test", "Name not equal or no contract found")
+      assert.equal(utils.toUtf8String(res[0]).replace(/\u0000/g, ''), "test", "Name not equal or no contract found")
+      assert.equal(res[0], stringToBytes32("test"), "Names should be equal")
       assert.equal(res[2], accounts[0], "The owner should be accounts[0]")
     })
     it('throws when the creator requests membership', async () => {
-      try {
-        await controller.requestMembership(group, {from:accounts[0]})
-      } catch (e) {
-        console.info("Owner cant request membership again " + e)
-      }
+      await assertError(controller.requestMembership(group, {from:accounts[0]}))
     })
     it('should let accounts[1] request membership', async () => {
       await controller.requestMembership(group, {from: accounts[1]})
@@ -78,19 +98,84 @@ contract('Test contracts', async (accounts) => {
       assert.notEqual(res[3].pop(), accounts[2], "accounts2 is not a member anymore")
     })
   })
-  describe('Bounty creation & proposals', () => {
+  describe('Pull request creation & approval',() => {
+    it('Gets the PRs for a group', async () => {
+      assert(Array.isArray(await controller.getPRs(group)), "Should retrieve an empty array")
+    })
+    it('Should let a group member create a PR', async () => {
+      await controller.createPR(group, "Test PR", "https://bitbucket.com", 152993)
+      prs = await controller.getPRs(group)
+      let pr = await controller.getPR(group, prs[0])
+      assert.equal(pr[0], "Test PR", "PR title should be equal")
+      assert.equal(pr[5], accounts[0], "Issuer should be accounts 0")
+    })
+    it('should retrieve a PR', async () => {
+      let pr = await controller.getPR(group, prs[0])
+      assert(pr !== undefined, "PR requested")
+    })
+    it('Should retrieve the reward from group', async () => {
+      let rew = await controller.getReward(group)
+      assert(rew !== undefined, "Reward requested")
+    })
+    it('Should let the group owner change the reward', async () => {
+      await controller.changeReward(group, 500)
+      assert.equal(await controller.getReward(group), 500, "Rewards not equal")
+    })
+    it('Throws when an unauthorized person tries to change the reward', async () => {
+      await assertError(controller.changeReward(group, 500, {from: accounts[1]}))
+    })
+    it('Should let someone contribute', async () => {
+      //starting balance 500 tokens on registration
+      let contr = await contractRegistry.getContract('controller')
+      await token.approve(contr, 200, {from: accounts[0]})
+      assert.equal((await token.allowance(accounts[0], contr)).toString(10), 200 , "Should have 200 as allowance")
+      await controller.contributePR(group, prs[0], 200, {from: accounts[0]})
+      assert.equal((await controller.getContribution(group, prs[0], accounts[0])).toString(10), 200, "Contribution should be 200")
+      assert.equal((await token.balanceOf(accounts[0])).toString(10), 300, "Remaining balance should be 300")
+      assert.equal((await token.balanceOf(group)).toString(10), 200, "Group balance should be 200")
+    })
+    it('Throws when a non member tries to contribute', async () => {
+      let contr = await contractRegistry.getContract('controller')
+      await token.approve(contr, 10, {from: accounts[0]})
+      assert.equal((await token.allowance(accounts[0], contr)).toString(10), 10 , "Should have 10 as allowance")
+      await assertError(controller.contributePR(group , prs[0], 10, {from: accounts[2]}))
+    })
+    it('Throws when someone tries to contribute more than he approved', async () => {
+      let contr = await contractRegistry.getContract('controller')
+      await token.approve(contr, 10, {from: accounts[0]})
+      assert.equal((await token.allowance(accounts[0], contr)).toString(10), 10 , "Should have 10 as allowance")
+      await assertError(controller.contributePR(group, prs[0], 20, {from: accounts[0]}))
+    })
+    it('Throws when a non authorized person tries to approve the PR', async () => {
+      await assertError(controller.approvePR(group, prs[0]))
+    })
+    it('Lets a member add a change request', async () => {
+      await controller.requestPRChange(group, prs[0], "Change request", {from: accounts[1]})
+      let change = await controller.getChangeRequest(group, prs[0], 0)
+      let pr = await controller.getPR(group, prs[0])
+      assert(pr[7] == 1, "Change count needs to be 1 Now")
+      assert(change[0] == "Change request", "References need to be equal")
+    })
+    it('Lets an authorized member approve the PR', async () => {
+      let grp = await controller.getGroup(group)
+      assert.equal(accounts[1], grp[3][1], "accounts1 should be the second member at this point")
+      await controller.approvePR(group, prs[0], {from: accounts[1]})
+      let pr = await controller.getPR(group, prs[0])
+      assert.equal(pr[4], 1, "Should be completed")
+    })
+    it('Should not be possible to approve a PR twice', async () => {
+      await assertError(controller.approvePR(group, prs[0], {from:accounts[1]}))
+    })
+  })
+  /*describe('Bounty creation & proposals', () => {
     it('Lets accounts[0] create a bounty', async () => {
-      await controller.createBounty(group, "TestBounty", "https://test.com", "qm20202", 152846577819 ,50)
+      await controller.createBounty(group, "TestBounty", "qm20202", 152846577819 ,50)
       let res = await controller.getBounties(group)
       res = await controller.getBounty(group, res[0])
       assert.equal(res[0], "TestBounty", "Bounty not found")
     })
     it('throws when a non member tries to create a bounty', async () => {
-      try {
-        await controller.createBounty(group, "TestBounty2", "https://test2.com", "qm202022", 152846577819 ,50, {from: accounts[2]})
-      } catch (e) {
-        console.info("A person that isn't a member can't create a bounty " +e)
-      }
+        await assertError(controller.createBounty(group, "TestBounty2", "qm202022", 152846577819 ,50, {from: accounts[2]}))
     })
     it('Should let accounts1 add a proposal to the bounty', async() => {
       let bnty = await controller.getBounties(group)
@@ -103,20 +188,12 @@ contract('Test contracts', async (accounts) => {
     it('Should throw when someone who isnt a member tries to add a proposal', async () => {
       let bnty = await controller.getBounties(group)
       bnty = bnty[0]
-      try {
-        await controller.createProposal(group, bnty, "qm200000", {from: accounts[2]})
-      } catch (e) {
-        console.info("A non-member can't create a proposal to a bounty " + e)
-      }
+        await assertError(controller.createProposal(group, bnty, "qm200000", {from: accounts[2]}))
     })
     it('Should throw when someone who is not the issuer tries to accept a bounty', async () => {
       let bnty = await controller.getBounties(group)
       bnty = bnty[0]
-      try {
-        await controller.acceptProposal(group, bnty, 0, {from: accounts[1]})
-      } catch (e) {
-        console.info("A person that isn't the issuer can't accept a proposal" + e)
-      }
+        await assertError(controller.acceptProposal(group, bnty, 0, {from: accounts[1]}))
     })
     it('Should let accounts0, the issuer of the bounty, accept the proposal', async () => {
       let bnty = await controller.getBounties(group)
@@ -126,4 +203,5 @@ contract('Test contracts', async (accounts) => {
       assert.equal(prpsl[2], true, "Proposal should be accepted now")
     })
   })
+  */
 })

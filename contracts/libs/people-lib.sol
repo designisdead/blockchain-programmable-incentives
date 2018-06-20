@@ -4,9 +4,6 @@ import '../interface/people-interface.sol';
 
 library PeopleLib {
 
-  event logRegistered(address indexed _wallet, string _name, string _email, string _company);
-  event logUpdateProfile(address indexed _wallet, string _email, string _name, string _company, string _avatar);
-
   function registerUser(PeopleInterface.People storage _people, string _name, string _email, string _company, string _avatar, address _sender) external {
       require(_people.people[_sender].wallet == address(0));
       _people.people[_sender].name = _name;
@@ -14,7 +11,6 @@ library PeopleLib {
       _people.people[_sender].company = _company;
       _people.people[_sender].avatar = _avatar;
       _people.people[_sender].wallet = _sender;
-      emit logRegistered(_sender, _name, _email, _company);
   }
 
   function updateUser(PeopleInterface.People storage _people, string _name, string _email, string _company, string _avatar, address _sender) external {
@@ -23,7 +19,6 @@ library PeopleLib {
     _updateEmail(_people, _email, _sender);
     _updateCompany(_people, _company, _sender);
     _updateAvatar(_people, _avatar, _sender);
-     emit logUpdateProfile(_sender, _email, _name, _company, _avatar);
   }
 
   function _updateName(PeopleInterface.People storage _people, string _name, address _sender) public {
@@ -83,7 +78,7 @@ library PeopleLib {
   }
 
   function addBounty (PeopleInterface.People storage _people, address _group, bytes32 _index, address _sender) external {
-    require(_people.people[_sender].wallet == _sender);
+     require(_people.people[_sender].wallet == _sender);
     _people.people[_sender].personBounties[_group].push(_index);
   }
 
@@ -92,7 +87,8 @@ library PeopleLib {
   }
 
   function _isRegistered (PeopleInterface.People storage _people, address _sender) external view returns (bool) {
-    if (_people.people[_sender].wallet == _sender) {
+    bytes memory email = bytes(_people.people[_sender].email);
+    if (email.length > 0) {
       return true;
     } else {
       return false;

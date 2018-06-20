@@ -2,6 +2,8 @@ pragma solidity ^0.4.23;
 
 interface ContractProvider {
     function contracts(bytes32 _name) external view returns (address);
+    function groups(bytes32 _name) external view returns (address);
+    function addGroup(bytes32 _name, address _addr) external;
 }
 
 

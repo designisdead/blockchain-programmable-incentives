@@ -14,6 +14,11 @@ module.exports = {
       port: 7545,
       network_id: "*",
       gasPrice: 1
+    },
+    clique: {
+      host: "localhost",
+      port: 8501,
+      network_id: "*"
     }
   },
   solc: {
