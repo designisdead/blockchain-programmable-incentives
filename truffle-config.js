@@ -12,13 +12,13 @@ module.exports = {
     ganache: {
       host: "localhost",
       port: 7545,
-      network_id: "*",
+      network_id: "5777",
       gasPrice: 1
     },
     clique: {
       host: "localhost",
       port: 8501,
-      network_id: "*"
+      network_id: "999"
     }
   },
   solc: {
